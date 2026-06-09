@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { PitchWizard } from "./pitch-wizard";
-import { PitchDetail } from "./pitch-detail";
+import { PitchWorkspace } from "./pitch-workspace";
 import type { Pitch } from "@/types";
-import { Button } from "@/components/ui/button";
-import { FileText, Plus } from "lucide-react";
 
 interface PitchManagementProps {
   startup: { id: string; name: string };
@@ -14,24 +12,26 @@ interface PitchManagementProps {
 }
 
 export function PitchManagement({ startup, pitch, versions }: PitchManagementProps) {
-  const [creating, setCreating] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
-  if (!pitch || creating) {
+  // Show wizard for new pitch or when user explicitly enters edit mode
+  if (!pitch || showWizard) {
     return (
       <PitchWizard
         startupId={startup.id}
         startupName={startup.name}
         existingPitch={pitch ?? undefined}
-        onCancel={() => setCreating(false)}
+        onCancel={pitch ? () => setShowWizard(false) : undefined}
       />
     );
   }
 
   return (
-    <PitchDetail
+    <PitchWorkspace
+      startup={startup}
       pitch={pitch}
       versions={versions}
-      onEdit={() => setCreating(true)}
+      onNewVersion={() => setShowWizard(true)}
     />
   );
 }
