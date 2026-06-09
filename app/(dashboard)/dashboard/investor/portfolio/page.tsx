@@ -7,9 +7,7 @@ import InvestorPortfolio from "@/components/investor/portfolio";
 export default async function InvestorPortfolioPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
   const { data: investor } = await supabase
@@ -20,30 +18,32 @@ export default async function InvestorPortfolioPage() {
 
   if (!investor) redirect("/dashboard/investor/kyc");
 
-  const { data: portfolio } = await supabase
+  // Fetch full CRM pipeline (all stages except none)
+  const { data: pipeline } = await supabase
     .from("crm_records")
     .select(`
-      *,
-      startup:startups(
-        id, name, logo_url, tagline, stage, industry, website_url,
-        health_scores:startup_health_scores(overall_score)
-      )
+      id, stage, investment_amount, notes, updated_at,
+      startups(id, name, logo_url, tagline, stage, industry, health_score)
     `)
     .eq("investor_id", investor.id)
-    .in("stage", ["invested"])
     .order("updated_at", { ascending: false });
 
+  // Fetch watchlist bookmarks
   const { data: watchlist } = await supabase
     .from("bookmarks")
     .select(`
-      *,
-      startup:startups(
-        id, name, logo_url, tagline, stage, industry,
-        health_scores:startup_health_scores(overall_score)
-      )
+      id, startup_id, created_at,
+      startups(id, name, logo_url, tagline, stage, industry, health_score)
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  return <InvestorPortfolio portfolio={portfolio ?? []} watchlist={watchlist ?? []} />;
+  return (
+    <InvestorPortfolio
+      pipeline={(pipeline ?? []) as never}
+      watchlist={(watchlist ?? []) as never}
+      investorId={investor.id}
+      userId={user.id}
+    />
+  );
 }

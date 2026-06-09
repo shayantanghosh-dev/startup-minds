@@ -70,15 +70,18 @@ export function StartupDiscovery({ startups, investorId, currentUserId, connecti
 
   async function handleBookmark(startupId: string) {
     const isBookmarked = bookmarkedIds.has(startupId);
+    const { data: { user } } = await supabase.auth.getUser();
     if (isBookmarked) {
       await supabase.from("bookmarks").delete().match({
+        user_id: user?.id,
         startup_id: startupId,
       });
       setBookmarkedIds((prev) => { const next = new Set(prev); next.delete(startupId); return next; });
+      toast.success("Removed from watchlist");
     } else {
-      await supabase.from("bookmarks").insert({ startup_id: startupId });
+      await supabase.from("bookmarks").insert({ user_id: user?.id, startup_id: startupId });
       setBookmarkedIds((prev) => new Set([...prev, startupId]));
-      toast.success("Startup bookmarked");
+      toast.success("Added to watchlist");
     }
   }
 
