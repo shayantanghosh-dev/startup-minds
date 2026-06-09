@@ -1,10 +1,19 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy instantiation — avoids build-time crash when RESEND_API_KEY is not set
+function getResend() {
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.startsWith("re_placeholder")) {
+    return null;
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
 const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@startupminds.com";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://startupminds.com";
 
 export async function sendWelcomeEmail(email: string, name: string) {
+  const resend = getResend();
+  if (!resend) return null;
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -57,6 +66,8 @@ export async function sendPitchStatusEmail(
     message: `Your pitch status has been updated to: ${status}`,
   };
 
+  const resend = getResend();
+  if (!resend) return null;
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -80,6 +91,8 @@ export async function sendConnectionRequestEmail(
   senderName: string,
   message?: string
 ) {
+  const resend = getResend();
+  if (!resend) return null;
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -102,6 +115,8 @@ export async function sendConnectionAcceptedEmail(
   senderName: string,
   receiverName: string
 ) {
+  const resend = getResend();
+  if (!resend) return null;
   return resend.emails.send({
     from: FROM,
     to: email,
@@ -125,6 +140,8 @@ export async function sendKYCStatusEmail(
   status: "approved" | "rejected",
   notes?: string
 ) {
+  const resend = getResend();
+  if (!resend) return null;
   return resend.emails.send({
     from: FROM,
     to: email,
