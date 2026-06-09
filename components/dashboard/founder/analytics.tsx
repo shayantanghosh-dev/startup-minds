@@ -126,17 +126,19 @@ export default function FounderAnalytics({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Health score over time */}
+        {/* Health score over time OR breakdown if only 1 data point */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Health Score History</CardTitle>
+            <CardTitle className="text-base">
+              {healthChartData.length >= 2 ? "Health Score History" : "Health Score Breakdown"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {healthChartData.length < 2 ? (
+            {healthChartData.length === 0 ? (
               <div className="h-40 flex items-center justify-center text-muted-foreground text-sm">
-                Not enough data yet — score updates after each AI analysis
+                No health score yet — run an AI analysis to get started
               </div>
-            ) : (
+            ) : healthChartData.length >= 2 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={healthChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -149,6 +151,30 @@ export default function FounderAnalytics({
                   <Line type="monotone" dataKey="market" stroke="#f59e0b" strokeWidth={1.5} name="Market" dot={false} />
                   <Line type="monotone" dataKey="product" stroke="#06b6d4" strokeWidth={1.5} name="Product" dot={false} />
                 </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              /* Single data point — show a category breakdown bar chart */
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart
+                  layout="vertical"
+                  data={[
+                    { label: "Overall", score: latestHealth?.overall_score ?? 0 },
+                    { label: "Team", score: latestHealth?.team_quality_score ?? 0 },
+                    { label: "Business Model", score: latestHealth?.business_model_score ?? 0 },
+                    { label: "Traction", score: latestHealth?.traction_score ?? 0 },
+                    { label: "Growth", score: latestHealth?.growth_score ?? 0 },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <YAxis dataKey="label" type="category" tick={{ fontSize: 11 }} width={110} />
+                  <Tooltip formatter={(v) => [`${v}/100`, "Score"]} />
+                  <Bar dataKey="score" radius={[0, 4, 4, 0]}>
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             )}
           </CardContent>
