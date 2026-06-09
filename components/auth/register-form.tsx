@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, Zap, Search, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,29 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+const ROLE_BENEFITS: Record<string, { perks: string[]; icon: React.ElementType; color: string }> = {
+  founder: {
+    icon: Zap,
+    color: "border-blue-500 bg-blue-50 dark:bg-blue-950/30",
+    perks: [
+      "AI-powered pitch analysis",
+      "Investor matching algorithm",
+      "Expert reviewer feedback",
+      "Startup Health Score™",
+    ],
+  },
+  investor: {
+    icon: Search,
+    color: "border-purple-500 bg-purple-50 dark:bg-purple-950/30",
+    perks: [
+      "Curated, pre-screened deal flow",
+      "AI compatibility matching",
+      "Private deal rooms & CRM",
+      "KYC-verified network",
+    ],
+  },
+};
+
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +70,7 @@ export function RegisterForm() {
   });
 
   const role = watch("role");
+  const roleInfo = ROLE_BENEFITS[role];
 
   async function signInWithGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -67,22 +91,15 @@ export function RegisterForm() {
       email: data.email,
       password: data.password,
       options: {
-        data: {
-          full_name: data.full_name,
-          role: data.role,
-        },
+        data: { full_name: data.full_name, role: data.role },
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
       },
     });
 
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
+    if (error) { toast.error(error.message); return; }
 
     if (authData.user) {
       toast.success("Account created! Welcome to StartupMinds.");
-      // Sign in immediately after signup
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -90,24 +107,24 @@ export function RegisterForm() {
       if (signInError) {
         router.push("/login");
       } else {
-        const role = data.role.replace("_", "-");
-        router.push(`/dashboard/${role}`);
+        router.push(`/dashboard/${data.role.replace("_", "-")}`);
         router.refresh();
       }
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Create account</h2>
-        <p className="text-muted-foreground mt-2">
-          Join the StartupMinds ecosystem
+        <h2 className="text-2xl font-bold tracking-tight">Create your account</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Join 2,400+ founders and 850+ investors on StartupMinds
         </p>
       </div>
 
+      {/* OAuth */}
       <div className="grid grid-cols-2 gap-3">
-        <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle}>
+        <Button type="button" variant="outline" className="w-full h-10" onClick={signInWithGoogle}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -116,9 +133,9 @@ export function RegisterForm() {
           </svg>
           Google
         </Button>
-        <Button type="button" variant="outline" className="w-full" onClick={signInWithLinkedIn}>
+        <Button type="button" variant="outline" className="w-full h-10" onClick={signInWithLinkedIn}>
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="#0A66C2">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
           </svg>
           LinkedIn
         </Button>
@@ -133,58 +150,68 @@ export function RegisterForm() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Role selection */}
-        <div className="space-y-3">
-          <Label>I am a...</Label>
+        <div className="space-y-2">
+          <Label className="text-sm">I want to...</Label>
           <RadioGroup
             value={role}
             onValueChange={(v) => setValue("role", v as "founder" | "investor")}
             className="grid grid-cols-2 gap-3"
           >
             {[
-              { value: "founder", label: "Founder", desc: "I have a startup" },
-              { value: "investor", label: "Investor", desc: "I want to invest" },
+              { value: "founder", label: "Raise Funding", sublabel: "I have a startup" },
+              { value: "investor", label: "Invest", sublabel: "I look for deals" },
             ].map((option) => (
               <div key={option.value}>
                 <RadioGroupItem value={option.value} id={option.value} className="sr-only" />
                 <Label
                   htmlFor={option.value}
-                  className={`flex flex-col cursor-pointer rounded-lg border-2 p-4 transition-colors ${
+                  className={`flex flex-col cursor-pointer rounded-xl border-2 p-3.5 transition-all ${
                     role === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-border hover:border-primary/40"
                   }`}
                 >
-                  <span className="font-semibold">{option.label}</span>
-                  <span className="text-muted-foreground text-xs">{option.desc}</span>
+                  <span className="font-semibold text-sm">{option.label}</span>
+                  <span className="text-muted-foreground text-xs mt-0.5">{option.sublabel}</span>
                 </Label>
               </div>
             ))}
           </RadioGroup>
+
+          {/* Role perks */}
+          <div className={`rounded-xl border-2 p-3 transition-all ${roleInfo.color}`}>
+            <p className="text-xs font-semibold mb-2 text-foreground">What you&apos;ll get:</p>
+            <div className="space-y-1">
+              {roleInfo.perks.map((perk) => (
+                <div key={perk} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                  {perk}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="full_name">Full Name</Label>
-          <Input id="full_name" placeholder="Your full name" {...register("full_name")} />
-          {errors.full_name && (
-            <p className="text-destructive text-sm">{errors.full_name.message}</p>
-          )}
+          <Label htmlFor="full_name" className="text-sm">Full Name</Label>
+          <Input id="full_name" placeholder="Your full name" autoComplete="name" {...register("full_name")} />
+          {errors.full_name && <p className="text-destructive text-xs">{errors.full_name.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
-          {errors.email && (
-            <p className="text-destructive text-sm">{errors.email.message}</p>
-          )}
+          <Label htmlFor="email" className="text-sm">Email Address</Label>
+          <Input id="email" type="email" placeholder="you@example.com" autoComplete="email" {...register("email")} />
+          {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-sm">Password</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="Min 8 chars, 1 uppercase, 1 number"
+              autoComplete="new-password"
               {...register("password")}
             />
             <button
@@ -195,29 +222,28 @@ export function RegisterForm() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-destructive text-sm">{errors.password.message}</p>
-          )}
+          {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Account
+        <Button type="submit" className="w-full h-11 font-semibold" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account…</>
+          ) : (
+            <>Create Free Account</>
+          )}
         </Button>
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-primary font-medium hover:underline">
-          Sign in
-        </Link>
+        <Link href="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
       </p>
 
-      <p className="text-center text-xs text-muted-foreground">
-        By creating an account, you agree to our{" "}
-        <Link href="/terms" className="underline hover:text-foreground">Terms of Service</Link>
-        {" "}and{" "}
+      <p className="text-center text-[11px] text-muted-foreground">
+        By signing up you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-foreground">Terms</Link> &amp;{" "}
         <Link href="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+        No credit card required.
       </p>
     </div>
   );

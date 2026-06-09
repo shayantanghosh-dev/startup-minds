@@ -75,6 +75,51 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
         </div>
       </div>
 
+      {/* What happens next — shown when pitch is under review */}
+      {pitch.status === "submitted" && (
+        <div className="flex items-start gap-3 rounded-xl border border-blue-400/50 bg-blue-50 dark:bg-blue-950/20 px-4 py-3">
+          <div className="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-white text-xs font-bold">!</span>
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">Your pitch is in the review queue</p>
+            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
+              Our expert reviewers will assess your pitch within <strong>3–5 business days</strong>.
+              You&apos;ll receive a notification with feedback. Once approved, your startup will be matched with relevant investors.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {pitch.status === "under_review" && (
+        <div className="flex items-start gap-3 rounded-xl border border-indigo-400/50 bg-indigo-50 dark:bg-indigo-950/20 px-4 py-3">
+          <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse mt-2 shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">A reviewer is currently reviewing your pitch</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Expect feedback within 1–2 business days. Keep your profile and startup details up to date.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {pitch.status === "approved" && (
+        <div className="flex items-start gap-3 rounded-xl border border-green-400/50 bg-green-50 dark:bg-green-950/20 px-4 py-3">
+          <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-white text-xs font-bold">✓</span>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-green-900 dark:text-green-100">Pitch approved — you&apos;re live!</p>
+            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+              Investors can now discover your startup. Check your <strong>Investor Matches</strong> to see who&apos;s compatible.
+            </p>
+          </div>
+          <Button size="sm" variant="outline" className="border-green-400 text-green-700 shrink-0" asChild>
+            <a href="/dashboard/founder/investors">View Matches</a>
+          </Button>
+        </div>
+      )}
+
       {pitch.status === "changes_requested" && pitch.changes_requested && (
         <Card className="border-orange-500/50 bg-orange-50 dark:bg-orange-950/20">
           <CardContent className="pt-4">

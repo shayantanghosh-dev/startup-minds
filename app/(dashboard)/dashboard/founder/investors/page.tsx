@@ -68,5 +68,5 @@ export default async function FounderInvestorsRoute() {
     })
     .filter((m): m is NonNullable<typeof m> => m !== null);
 
-  return <FounderInvestorsPage startup={startup} matches={matches} />;
+  return <FounderInvestorsPage startup={startup} matches={matches} myUserId={user.id} />;
 }

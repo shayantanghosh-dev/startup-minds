@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Bell, Moon, Sun, Search, LogOut, Users, Building2 } from "lucide-react";
+import { Menu, Bell, Moon, Sun, Search, LogOut, Users, Building2, HelpCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
@@ -44,8 +44,16 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   const [searching, setSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const notifPath = `/dashboard/${user.role.replace("_", "-")}/notifications`;
-  const settingsPath = `/dashboard/${user.role.replace("_", "-")}/settings`;
+  const roleSlug = user.role.replace("_", "-");
+  const notifPath = `/dashboard/${roleSlug}/notifications`;
+  const settingsPath = `/dashboard/${roleSlug}/settings`;
+  const ROLE_HELP_LINKS: Record<string, string> = {
+    founder: "/dashboard/founder/pitch",
+    investor: "/dashboard/investor/discover",
+    reviewer: "/dashboard/reviewer/queue",
+    sub_admin: "/dashboard/admin/pitches",
+    super_admin: "/dashboard/super-admin/settings",
+  };
 
   // Close on outside click
   useEffect(() => {
@@ -102,12 +110,17 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search startups, investors..."
-            className="pl-9 bg-muted border-0"
+            placeholder="Search startups, investors…"
+            className="pl-9 pr-16 bg-muted border-0"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setShowResults(true)}
           />
+          {!query && (
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex h-5 items-center gap-1 rounded border bg-background px-1.5 text-[10px] font-medium text-muted-foreground opacity-60">
+              ⌘K
+            </kbd>
+          )}
         </div>
         {showResults && (
           <div className="absolute top-full mt-1 w-full bg-background border rounded-lg shadow-lg z-50 overflow-hidden">
@@ -150,6 +163,12 @@ export function Header({ user, onMenuClick }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
+        <Button variant="ghost" size="icon" className="relative hidden sm:flex" title="Quick action" asChild>
+          <Link href={ROLE_HELP_LINKS[user.role] ?? "/"}>
+            <HelpCircle className="h-4 w-4" />
+          </Link>
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"
@@ -185,8 +204,11 @@ export function Header({ user, onMenuClick }: HeaderProps) {
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push(`/profile/${user.id}`)}>
+              View My Profile
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push(settingsPath)}>
-              Profile Settings
+              Account Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="text-destructive">
