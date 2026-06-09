@@ -1,9 +1,24 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { Pitch, AIAnalysis, StartupHealthScore } from "@/types";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+// Use gemini-1.5-flash for speed/cost efficiency; swap to gemini-1.5-pro for higher quality
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+async function generateJSON<T>(prompt: string): Promise<T> {
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
+
+  // Strip markdown code fences if present
+  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    throw new Error("Failed to parse AI response as JSON");
+  }
+}
 
 export async function analyzePitch(pitch: Partial<Pitch>): Promise<AIAnalysis> {
   const prompt = `You are an expert startup analyst and venture capital advisor. Analyze this startup pitch and provide a comprehensive evaluation.
@@ -11,38 +26,25 @@ export async function analyzePitch(pitch: Partial<Pitch>): Promise<AIAnalysis> {
 STARTUP PITCH DATA:
 ${JSON.stringify(pitch, null, 2)}
 
-Provide a detailed analysis in the following JSON format (respond ONLY with valid JSON):
+Provide a detailed analysis in the following JSON format (respond ONLY with valid JSON, no markdown):
 {
   "quality_score": <0-100 integer>,
-  "strengths": ["<strength1>", "<strength2>", ...],
-  "weaknesses": ["<weakness1>", "<weakness2>", ...],
-  "improvements": ["<improvement1>", "<improvement2>", ...],
+  "strengths": ["<strength1>", "<strength2>"],
+  "weaknesses": ["<weakness1>", "<weakness2>"],
+  "improvements": ["<improvement1>", "<improvement2>"],
   "risk_assessment": "<detailed risk analysis>",
   "funding_readiness": <0-100 integer>,
   "market_opportunity_score": <0-100 integer>,
   "team_strength_score": <0-100 integer>,
   "business_viability_score": <0-100 integer>,
   "competitive_positioning": "<competitive analysis>",
-  "missing_information": ["<missing1>", "<missing2>", ...],
+  "missing_information": ["<missing1>", "<missing2>"],
   "executive_summary": "<concise 2-3 sentence executive summary>",
-  "investment_insights": ["<insight1>", "<insight2>", ...],
+  "investment_insights": ["<insight1>", "<insight2>"],
   "overall_recommendation": "<strong_buy|buy|hold|pass>"
 }`;
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 2000,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const content = message.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
-
-  try {
-    return JSON.parse(content.text) as AIAnalysis;
-  } catch {
-    throw new Error("Failed to parse AI analysis response");
-  }
+  return generateJSON<AIAnalysis>(prompt);
 }
 
 export async function generateStartupHealthScore(
@@ -53,7 +55,7 @@ export async function generateStartupHealthScore(
 STARTUP DATA:
 ${JSON.stringify(startupData, null, 2)}
 
-Score each dimension from 0-100 and provide the result in this JSON format (respond ONLY with valid JSON):
+Score each dimension from 0-100 and provide the result in this JSON format (respond ONLY with valid JSON, no markdown):
 {
   "overall_score": <0-100>,
   "traction_score": <0-100>,
@@ -72,16 +74,7 @@ Score each dimension from 0-100 and provide the result in this JSON format (resp
   }
 }`;
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1000,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const content = message.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
-
-  return JSON.parse(content.text);
+  return generateJSON(prompt);
 }
 
 export async function generateMatchExplanation(
@@ -96,23 +89,14 @@ ${JSON.stringify(startupData, null, 2)}
 INVESTOR PREFERENCES:
 ${JSON.stringify(investorPreferences, null, 2)}
 
-Respond ONLY with valid JSON:
+Respond ONLY with valid JSON (no markdown):
 {
   "score": <0-100 compatibility score>,
   "reasons": ["<reason1>", "<reason2>", "<reason3>"],
   "explanation": "<2-3 sentence explanation of the match quality>"
 }`;
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 500,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const content = message.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
-
-  return JSON.parse(content.text);
+  return generateJSON(prompt);
 }
 
 export async function generateInvestorSummary(
@@ -130,7 +114,7 @@ export async function generateInvestorSummary(
 STARTUP: ${JSON.stringify(startup, null, 2)}
 PITCH: ${JSON.stringify(pitch, null, 2)}
 
-Respond ONLY with valid JSON:
+Respond ONLY with valid JSON (no markdown):
 {
   "executive_summary": "<2-3 sentence high-level summary>",
   "opportunity_analysis": "<market opportunity assessment>",
@@ -139,14 +123,5 @@ Respond ONLY with valid JSON:
   "key_insights": ["<insight1>", "<insight2>", "<insight3>"]
 }`;
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1000,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const content = message.content[0];
-  if (content.type !== "text") throw new Error("Unexpected response type");
-
-  return JSON.parse(content.text);
+  return generateJSON(prompt);
 }

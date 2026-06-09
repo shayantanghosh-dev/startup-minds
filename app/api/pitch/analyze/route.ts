@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/server";
-import { analyzePitch, generateStartupHealthScore } from "@/lib/ai/anthropic";
+import { analyzePitch, generateStartupHealthScore } from "@/lib/ai/gemini";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
