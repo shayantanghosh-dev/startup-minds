@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface AdminEventsPageProps {
 
 export function AdminEventsPage({ events, adminId }: AdminEventsPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -46,14 +48,14 @@ export function AdminEventsPage({ events, adminId }: AdminEventsPageProps) {
       organizer_id: adminId, status: "draft",
     });
     if (error) toast.error(error.message);
-    else { toast.success("Event created"); setOpen(false); window.location.reload(); }
+    else { toast.success("Event created"); setOpen(false); router.refresh(); }
     setCreating(false);
   }
 
   async function updateStatus(id: string, status: string) {
     const { error } = await supabase.from("events").update({ status }).eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Status updated"); window.location.reload(); }
+    else { toast.success("Status updated"); router.refresh(); }
   }
 
   return (

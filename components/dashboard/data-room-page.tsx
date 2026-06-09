@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +58,7 @@ function formatFileSize(bytes?: number): string {
 
 export function DataRoomPage({ startup, dataRooms }: DataRoomPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [newRoomName, setNewRoomName] = useState("");
@@ -75,7 +77,7 @@ export function DataRoomPage({ startup, dataRooms }: DataRoomPageProps) {
       name: newRoomName.trim(),
     }).select().single();
     if (error) toast.error(error.message);
-    else { toast.success("Data room created"); setSelectedRoom(data.id); setNewRoomName(""); window.location.reload(); }
+    else { toast.success("Data room created"); setSelectedRoom(data.id); setNewRoomName(""); router.refresh(); }
     setCreating(false);
   }
 
@@ -100,7 +102,7 @@ export function DataRoomPage({ startup, dataRooms }: DataRoomPageProps) {
       });
       if (docErr) throw docErr;
       toast.success("Document uploaded");
-      window.location.reload();
+      router.refresh();
     } catch (e: unknown) {
       toast.error((e as Error).message ?? "Upload failed");
     }
@@ -110,7 +112,7 @@ export function DataRoomPage({ startup, dataRooms }: DataRoomPageProps) {
   async function deleteDocument(docId: string) {
     const { error } = await supabase.from("data_room_documents").delete().eq("id", docId);
     if (error) toast.error(error.message);
-    else { toast.success("Document deleted"); window.location.reload(); }
+    else { toast.success("Document deleted"); router.refresh(); }
   }
 
   if (!startup) {

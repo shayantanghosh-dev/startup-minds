@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,13 +23,14 @@ const ROLE_OPTIONS = ["reviewer", "sub_admin", "super_admin"];
 
 export function SuperAdminRolesPage({ customRoles, admins }: SuperAdminRolesPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   async function changeRole(userId: string, newRole: string) {
     setUpdatingId(userId);
     const { error } = await supabase.from("users").update({ role: newRole }).eq("id", userId);
     if (error) toast.error(error.message);
-    else { toast.success("Role updated"); window.location.reload(); }
+    else { toast.success("Role updated"); router.refresh(); }
     setUpdatingId(null);
   }
 

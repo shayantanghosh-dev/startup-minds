@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +34,7 @@ interface EventsPageProps {
 
 export function EventsPage({ events, myRegistrations, userId }: EventsPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const registeredEventIds = new Set(myRegistrations.map(r => (r.events as Record<string, unknown>)?.id as string ?? r.event_id as string));
@@ -45,7 +47,7 @@ export function EventsPage({ events, myRegistrations, userId }: EventsPageProps)
       registration_type: "attendee",
     });
     if (error) toast.error(error.message);
-    else { toast.success("Registered successfully!"); window.location.reload(); }
+    else { toast.success("Registered successfully!"); router.refresh(); }
     setLoadingId(null);
   }
 
@@ -53,7 +55,7 @@ export function EventsPage({ events, myRegistrations, userId }: EventsPageProps)
     setLoadingId(eventId);
     const { error } = await supabase.from("event_registrations").delete().eq("event_id", eventId).eq("user_id", userId);
     if (error) toast.error(error.message);
-    else { toast.success("Registration cancelled"); window.location.reload(); }
+    else { toast.success("Registration cancelled"); router.refresh(); }
     setLoadingId(null);
   }
 

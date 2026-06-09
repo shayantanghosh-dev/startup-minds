@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +20,7 @@ interface SuperAdminStartupsPageProps {
 
 export function SuperAdminStartupsPage({ startups }: SuperAdminStartupsPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [search, setSearch] = useState("");
 
   const filtered = startups.filter(s => {
@@ -31,13 +33,13 @@ export function SuperAdminStartupsPage({ startups }: SuperAdminStartupsPageProps
   async function toggleFeatured(id: string, current: boolean) {
     const { error } = await supabase.from("startups").update({ is_featured: !current }).eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success(!current ? "Startup featured" : "Startup unfeatured"); window.location.reload(); }
+    else { toast.success(!current ? "Startup featured" : "Startup unfeatured"); router.refresh(); }
   }
 
   async function toggleDPIIT(id: string, current: boolean) {
     const { error } = await supabase.from("startups").update({ is_dpiit_verified: !current }).eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("DPIIT status updated"); window.location.reload(); }
+    else { toast.success("DPIIT status updated"); router.refresh(); }
   }
 
   return (
@@ -79,7 +81,7 @@ export function SuperAdminStartupsPage({ startups }: SuperAdminStartupsPageProps
                       {!!(startup.is_featured) && <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />}
                       {!!(startup.is_dpiit_verified) && <Badge variant="outline" className="text-xs text-green-600">DPIIT</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground">{startup.industry as string} · {founder?.full_name as string}</p>
+                    <p className="text-xs text-muted-foreground">{startup.industry as string} Â· {founder?.full_name as string}</p>
                     {latestPitch && (
                       <Badge variant="outline" className="text-xs mt-0.5 capitalize">
                         {(latestPitch.status as string).replace("_", " ")}

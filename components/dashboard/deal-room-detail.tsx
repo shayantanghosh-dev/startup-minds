@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { formatRelativeTime } from "@/lib/utils";
@@ -25,6 +26,7 @@ interface DealRoomDetailPageProps {
 
 export function DealRoomDetailPage({ dealRoom, currentUserId }: DealRoomDetailPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [noteContent, setNoteContent] = useState("");
   const [addingNote, setAddingNote] = useState(false);
   const [newMilestone, setNewMilestone] = useState({ title: "", due_date: "" });
@@ -45,7 +47,7 @@ export function DealRoomDetailPage({ dealRoom, currentUserId }: DealRoomDetailPa
       content: noteContent.trim(),
     });
     if (error) toast.error(error.message);
-    else { toast.success("Note added"); setNoteContent(""); window.location.reload(); }
+    else { toast.success("Note added"); setNoteContent(""); router.refresh(); }
     setAddingNote(false);
   }
 
@@ -58,7 +60,7 @@ export function DealRoomDetailPage({ dealRoom, currentUserId }: DealRoomDetailPa
       due_date: newMilestone.due_date || null,
     });
     if (error) toast.error(error.message);
-    else { toast.success("Milestone added"); setNewMilestone({ title: "", due_date: "" }); window.location.reload(); }
+    else { toast.success("Milestone added"); setNewMilestone({ title: "", due_date: "" }); router.refresh(); }
     setAddingMilestone(false);
   }
 
@@ -68,7 +70,7 @@ export function DealRoomDetailPage({ dealRoom, currentUserId }: DealRoomDetailPa
       status: newStatus,
       completed_at: newStatus === "completed" ? new Date().toISOString() : null,
     }).eq("id", milestoneId);
-    window.location.reload();
+    router.refresh();
   }
 
   const completedCount = milestones.filter(m => m.status === "completed").length;

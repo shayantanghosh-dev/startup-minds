@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Edit, History, Brain, TrendingUp, AlertTriangle, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ interface PitchDetailProps {
 }
 
 export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
+  const router = useRouter();
   const status = STATUS_CONFIG[pitch.status] ?? { label: pitch.status, variant: "secondary" as const };
   const aiAnalysis = pitch.ai_analysis;
   const [restoringId, setRestoringId] = useState<string | null>(null);
@@ -43,7 +45,7 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Restore failed"); return; }
       toast.success("Pitch restored to selected version");
-      window.location.reload();
+      router.refresh();
     } catch {
       toast.error("Failed to restore pitch");
     } finally {
@@ -59,7 +61,7 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
           <div className="flex items-center gap-2 mt-1">
             <Badge variant={status.variant}>{status.label}</Badge>
             <span className="text-sm text-muted-foreground">
-              Version {pitch.version} • {pitch.submitted_at ? formatDate(pitch.submitted_at) : "Not submitted"}
+              Version {pitch.version} â€¢ {pitch.submitted_at ? formatDate(pitch.submitted_at) : "Not submitted"}
             </span>
           </div>
         </div>
@@ -176,7 +178,7 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
                     <ul className="space-y-2">
                       {aiAnalysis.strengths.map((s, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="text-green-500 mt-0.5">•</span>{s}
+                          <span className="text-green-500 mt-0.5">â€¢</span>{s}
                         </li>
                       ))}
                     </ul>
@@ -192,7 +194,7 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
                     <ul className="space-y-2">
                       {aiAnalysis.improvements.map((imp, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="text-orange-500 mt-0.5">•</span>{imp}
+                          <span className="text-orange-500 mt-0.5">â€¢</span>{imp}
                         </li>
                       ))}
                     </ul>
@@ -238,7 +240,7 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
                       <div>
                         <p className="text-sm font-medium">Version {version.version}</p>
                         <p className="text-xs text-muted-foreground">
-                          {version.change_summary} • {formatDate(version.created_at)}
+                          {version.change_summary} â€¢ {formatDate(version.created_at)}
                         </p>
                       </div>
                       <Button

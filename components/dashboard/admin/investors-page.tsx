@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ const KYC_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 
 export function AdminInvestorsPage({ investors }: AdminInvestorsPageProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [filterKyc, setFilterKyc] = useState("all");
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export function AdminInvestorsPage({ investors }: AdminInvestorsPageProps) {
       kyc_status: verified ? "approved" : "rejected",
     }).eq("id", investorId);
     if (error) toast.error(error.message);
-    else { toast.success(verified ? "Investor verified" : "Investor rejected"); window.location.reload(); }
+    else { toast.success(verified ? "Investor verified" : "Investor rejected"); router.refresh(); }
   }
 
   return (
