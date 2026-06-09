@@ -233,12 +233,17 @@ export function PitchWorkspace({ startup, pitch, versions, onNewVersion }: Pitch
         body: JSON.stringify({ pitchId: pitch.id }),
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error ?? "AI analysis failed"); }
-      else { toast.success("AI analysis complete!"); router.refresh(); }
-    } catch {
-      toast.error("Failed to run AI analysis");
+      if (!res.ok) {
+        toast.error(data.error ?? "AI analysis failed");
+      } else {
+        toast.success("AI analysis complete!");
+        router.refresh();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to run AI analysis");
+    } finally {
+      setRunningAI(false);
     }
-    setRunningAI(false);
   }, [pitch.id, router]);
 
   // ── Restore version ────────────────────────────────────────────────────────
