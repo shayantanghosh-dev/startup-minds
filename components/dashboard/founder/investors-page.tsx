@@ -8,28 +8,34 @@ import { Progress } from "@/components/ui/progress";
 import { Users, MapPin, DollarSign, Zap, Star, Mail } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
+interface InvestorUser {
+  full_name: string;
+  avatar_url?: string;
+  email: string;
+  location?: string;
+}
+
+interface InvestorRecord {
+  id: string;
+  organization?: string;
+  organization_type?: string;
+  min_ticket_size?: number;
+  max_ticket_size?: number;
+  preferred_sectors?: string[];
+  preferred_stages?: string[];
+  investment_thesis?: string;
+  is_verified: boolean;
+  // Supabase may return nested relations as array or object
+  users: InvestorUser | InvestorUser[] | null;
+}
+
 interface InvestorMatch {
   id: string;
   compatibility_score: number;
-  match_reasons: string[];
+  match_reasons: string[] | null;
   ai_explanation?: string;
-  investors: {
-    id: string;
-    organization?: string;
-    organization_type?: string;
-    min_ticket_size?: number;
-    max_ticket_size?: number;
-    preferred_sectors?: string[];
-    preferred_stages?: string[];
-    investment_thesis?: string;
-    is_verified: boolean;
-    users: {
-      full_name: string;
-      avatar_url?: string;
-      email: string;
-      location?: string;
-    };
-  };
+  // Supabase may return as array or object depending on relation cardinality
+  investors: InvestorRecord | InvestorRecord[] | null;
 }
 
 interface FounderInvestorsPageProps {
@@ -80,8 +86,11 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
           <p className="text-sm text-muted-foreground">{matches.length} investor match{matches.length !== 1 ? "es" : ""} found</p>
           <div className="grid gap-4 md:grid-cols-2">
             {matches.map(match => {
-              const inv = match.investors;
-              const user = inv.users;
+              // Supabase can return relations as array or object — normalise both
+              const inv = Array.isArray(match.investors) ? match.investors[0] : match.investors;
+              if (!inv) return null;
+              const user = Array.isArray(inv.users) ? inv.users[0] : inv.users;
+              if (!user) return null;
               return (
                 <Card key={match.id} className="hover:border-primary/30 transition-colors">
                   <CardHeader className="pb-3">
@@ -149,7 +158,7 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
                       <p className="text-xs text-muted-foreground border-t pt-2">{match.ai_explanation}</p>
                     )}
 
-                    {match.match_reasons && match.match_reasons.length > 0 && (
+                    {Array.isArray(match.match_reasons) && match.match_reasons.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {match.match_reasons.map(r => (
                           <span key={r} className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{r}</span>
