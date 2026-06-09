@@ -39,13 +39,13 @@ export default function FounderAnalytics({
 }: Props) {
   // Process health history for chart
   const healthChartData = healthHistory.map((h) => ({
-    date: formatDate(h.calculated_at as string),
+    date: formatDate(h.computed_at as string),
     overall: h.overall_score,
-    team: h.team_score,
-    market: h.market_score,
-    product: h.product_score,
+    team: h.team_quality_score,
+    market: h.market_opportunity_score,
+    product: h.business_model_score,
     traction: h.traction_score,
-    financials: h.financials_score,
+    growth: h.growth_score,
   }));
 
   // Process pitch views — group by date

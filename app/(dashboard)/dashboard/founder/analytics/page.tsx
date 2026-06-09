@@ -28,21 +28,22 @@ export default async function FounderAnalyticsPage() {
   ] = await Promise.all([
     supabase
       .from("startup_health_scores")
-      .select("overall_score, team_score, market_score, product_score, traction_score, financials_score, calculated_at")
+      .select("overall_score, traction_score, growth_score, engagement_score, team_quality_score, business_model_score, computed_at")
       .eq("startup_id", startup.id)
-      .order("calculated_at", { ascending: true })
+      .order("computed_at", { ascending: true })
       .limit(12),
     supabase
       .from("analytics_events")
       .select("created_at, properties")
-      .eq("event_type", "startup_view")
-      .eq("startup_id", startup.id)
+      .eq("event_name", "startup_view")
+      .eq("entity_type", "startup")
+      .eq("entity_id", startup.id)
       .order("created_at", { ascending: false })
       .limit(30),
     supabase
       .from("connection_requests")
       .select("status, created_at")
-      .eq("target_id", user.id)
+      .eq("receiver_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("crm_records")

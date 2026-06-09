@@ -16,64 +16,67 @@ import {
   Database, Globe, Gavel, TrendingUp,
 } from "lucide-react";
 
-const NAV_CONFIG: Record<string, { label: string; icon: React.ElementType; href: string }[]> = {
+// exact: true  → only highlight when pathname === href
+// exact: false → also highlight for child routes (href + "/...")
+const NAV_CONFIG: Record<string, { label: string; icon: React.ElementType; href: string; exact?: boolean }[]> = {
   founder: [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard/founder" },
-    { label: "My Startup", icon: Rocket, href: "/dashboard/founder/startup" },
-    { label: "Pitch", icon: FileText, href: "/dashboard/founder/pitch" },
-    { label: "Analytics", icon: BarChart3, href: "/dashboard/founder/analytics" },
-    { label: "Investors", icon: Users, href: "/dashboard/founder/investors" },
-    { label: "Deal Rooms", icon: Briefcase, href: "/dashboard/founder/deal-rooms" },
-    { label: "Data Room", icon: Database, href: "/dashboard/founder/data-room" },
-    { label: "Messages", icon: MessageSquare, href: "/dashboard/founder/messages" },
-    { label: "Events", icon: Calendar, href: "/dashboard/founder/events" },
-    { label: "Notifications", icon: Bell, href: "/dashboard/founder/notifications" },
-    { label: "Settings", icon: Settings, href: "/dashboard/founder/settings" },
+    { label: "Overview",      icon: LayoutDashboard, href: "/dashboard/founder",              exact: true  },
+    { label: "My Startup",    icon: Rocket,          href: "/dashboard/founder/startup",       exact: true  },
+    { label: "Pitch",         icon: FileText,        href: "/dashboard/founder/pitch",         exact: true  },
+    { label: "Analytics",     icon: BarChart3,       href: "/dashboard/founder/analytics",     exact: true  },
+    { label: "Investors",     icon: Users,           href: "/dashboard/founder/investors",     exact: true  },
+    { label: "Deal Rooms",    icon: Briefcase,       href: "/dashboard/founder/deal-rooms",    exact: false },
+    { label: "Data Room",     icon: Database,        href: "/dashboard/founder/data-room",     exact: true  },
+    { label: "Messages",      icon: MessageSquare,   href: "/dashboard/founder/messages",      exact: true  },
+    { label: "Events",        icon: Calendar,        href: "/dashboard/founder/events",        exact: true  },
+    { label: "Notifications", icon: Bell,            href: "/dashboard/founder/notifications", exact: true  },
+    { label: "Settings",      icon: Settings,        href: "/dashboard/founder/settings",      exact: true  },
   ],
   investor: [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard/investor" },
-    { label: "Discover", icon: Search, href: "/dashboard/investor/discover" },
-    { label: "My CRM", icon: Briefcase, href: "/dashboard/investor/crm" },
-    { label: "Portfolio", icon: DollarSign, href: "/dashboard/investor/portfolio" },
-    { label: "Deal Rooms", icon: Gavel, href: "/dashboard/investor/deal-rooms" },
-    { label: "Matches", icon: Star, href: "/dashboard/investor/matches" },
-    { label: "Leaderboard", icon: Trophy, href: "/dashboard/investor/leaderboard" },
-    { label: "Events", icon: Calendar, href: "/dashboard/investor/events" },
-    { label: "Messages", icon: MessageSquare, href: "/dashboard/investor/messages" },
-    { label: "KYC", icon: UserCheck, href: "/dashboard/investor/kyc" },
-    { label: "Settings", icon: Settings, href: "/dashboard/investor/settings" },
+    { label: "Overview",      icon: LayoutDashboard, href: "/dashboard/investor",              exact: true  },
+    { label: "Discover",      icon: Search,          href: "/dashboard/investor/discover",     exact: true  },
+    { label: "My CRM",        icon: Briefcase,       href: "/dashboard/investor/crm",          exact: true  },
+    { label: "Portfolio",     icon: DollarSign,      href: "/dashboard/investor/portfolio",    exact: true  },
+    { label: "Deal Rooms",    icon: Gavel,           href: "/dashboard/investor/deal-rooms",   exact: false },
+    { label: "Matches",       icon: Star,            href: "/dashboard/investor/matches",      exact: true  },
+    { label: "Leaderboard",   icon: Trophy,          href: "/dashboard/investor/leaderboard",  exact: true  },
+    { label: "Events",        icon: Calendar,        href: "/dashboard/investor/events",       exact: true  },
+    { label: "Messages",      icon: MessageSquare,   href: "/dashboard/investor/messages",     exact: true  },
+    { label: "Notifications", icon: Bell,            href: "/dashboard/investor/notifications",exact: true  },
+    { label: "KYC",           icon: UserCheck,       href: "/dashboard/investor/kyc",          exact: true  },
+    { label: "Settings",      icon: Settings,        href: "/dashboard/investor/settings",     exact: true  },
   ],
   reviewer: [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard/reviewer" },
-    { label: "Review Queue", icon: ClipboardList, href: "/dashboard/reviewer/queue" },
-    { label: "My Reviews", icon: FileText, href: "/dashboard/reviewer/reviews" },
-    { label: "Analytics", icon: BarChart3, href: "/dashboard/reviewer/analytics" },
-    { label: "Settings", icon: Settings, href: "/dashboard/reviewer/settings" },
+    { label: "Overview",      icon: LayoutDashboard, href: "/dashboard/reviewer",              exact: true  },
+    { label: "Review Queue",  icon: ClipboardList,   href: "/dashboard/reviewer/queue",        exact: false },
+    { label: "My Reviews",    icon: FileText,        href: "/dashboard/reviewer/reviews",      exact: true  },
+    { label: "Analytics",     icon: BarChart3,       href: "/dashboard/reviewer/analytics",    exact: true  },
+    { label: "Settings",      icon: Settings,        href: "/dashboard/reviewer/settings",     exact: true  },
   ],
   sub_admin: [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard/admin" },
-    { label: "Users", icon: Users, href: "/dashboard/admin/users" },
-    { label: "Startups", icon: Rocket, href: "/dashboard/admin/startups" },
-    { label: "Investors", icon: DollarSign, href: "/dashboard/admin/investors" },
-    { label: "Pitches", icon: FileText, href: "/dashboard/admin/pitches" },
-    { label: "Events", icon: Calendar, href: "/dashboard/admin/events" },
-    { label: "Reports", icon: Shield, href: "/dashboard/admin/reports" },
-    { label: "Analytics", icon: BarChart3, href: "/dashboard/admin/analytics" },
-    { label: "Settings", icon: Settings, href: "/dashboard/admin/settings" },
+    { label: "Overview",      icon: LayoutDashboard, href: "/dashboard/admin",                 exact: true  },
+    { label: "Users",         icon: Users,           href: "/dashboard/admin/users",           exact: true  },
+    { label: "Startups",      icon: Rocket,          href: "/dashboard/admin/startups",        exact: true  },
+    { label: "Investors",     icon: DollarSign,      href: "/dashboard/admin/investors",       exact: true  },
+    { label: "Pitches",       icon: FileText,        href: "/dashboard/admin/pitches",         exact: false },
+    { label: "Events",        icon: Calendar,        href: "/dashboard/admin/events",          exact: true  },
+    { label: "Reports",       icon: Shield,          href: "/dashboard/admin/reports",         exact: true  },
+    { label: "Analytics",     icon: BarChart3,       href: "/dashboard/admin/analytics",       exact: true  },
+    { label: "Settings",      icon: Settings,        href: "/dashboard/admin/settings",        exact: true  },
   ],
   super_admin: [
-    { label: "Overview", icon: LayoutDashboard, href: "/dashboard/super-admin" },
-    { label: "Users", icon: Users, href: "/dashboard/super-admin/users" },
-    { label: "Startups", icon: Rocket, href: "/dashboard/super-admin/startups" },
-    { label: "Investors", icon: DollarSign, href: "/dashboard/super-admin/investors" },
-    { label: "Pitches", icon: FileText, href: "/dashboard/super-admin/pitches" },
-    { label: "Reviews", icon: ClipboardList, href: "/dashboard/super-admin/reviews" },
-    { label: "Roles & Perms", icon: Shield, href: "/dashboard/super-admin/roles" },
-    { label: "Events", icon: Calendar, href: "/dashboard/super-admin/events" },
-    { label: "Analytics", icon: TrendingUp, href: "/dashboard/super-admin/analytics" },
-    { label: "Reports", icon: Globe, href: "/dashboard/super-admin/reports" },
-    { label: "Audit Logs", icon: Database, href: "/dashboard/super-admin/audit-logs" },
-    { label: "Platform Settings", icon: Settings, href: "/dashboard/super-admin/settings" },
+    { label: "Overview",         icon: LayoutDashboard, href: "/dashboard/super-admin",                exact: true  },
+    { label: "Users",            icon: Users,           href: "/dashboard/super-admin/users",           exact: true  },
+    { label: "Startups",         icon: Rocket,          href: "/dashboard/super-admin/startups",        exact: true  },
+    { label: "Investors",        icon: DollarSign,      href: "/dashboard/super-admin/investors",       exact: true  },
+    { label: "Pitches",          icon: FileText,        href: "/dashboard/super-admin/pitches",         exact: true  },
+    { label: "Reviews",          icon: ClipboardList,   href: "/dashboard/super-admin/reviews",         exact: true  },
+    { label: "Roles & Perms",    icon: Shield,          href: "/dashboard/super-admin/roles",           exact: true  },
+    { label: "Events",           icon: Calendar,        href: "/dashboard/super-admin/events",          exact: true  },
+    { label: "Analytics",        icon: TrendingUp,      href: "/dashboard/super-admin/analytics",       exact: true  },
+    { label: "Reports",          icon: Globe,           href: "/dashboard/super-admin/reports",         exact: true  },
+    { label: "Audit Logs",       icon: Database,        href: "/dashboard/super-admin/audit-logs",      exact: true  },
+    { label: "Platform Settings",icon: Settings,        href: "/dashboard/super-admin/settings",        exact: true  },
   ],
 };
 
@@ -133,9 +136,9 @@ export function Sidebar({ user, open, onClose }: SidebarProps) {
         <ScrollArea className="flex-1 px-3 py-4">
           <nav className="space-y-1">
             {navItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/dashboard" && pathname.startsWith(item.href));
+              const isActive = item.exact === false
+                ? pathname === item.href || pathname.startsWith(item.href + "/")
+                : pathname === item.href;
 
               return (
                 <Link
