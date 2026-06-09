@@ -91,8 +91,8 @@ export default function MessagingPage({ conversations: initialConvos, currentUse
   }
 
   function getOtherParticipant(conv: Record<string, unknown>) {
-    const participants = (conv.participants as { user: Record<string, unknown> }[]) ?? [];
-    return participants.find((p) => p.user.id !== currentUserId)?.user ?? null;
+    // other_user is pre-computed server-side from participant_ids
+    return (conv.other_user as Record<string, unknown> | null) ?? null;
   }
 
   const filteredConvos = conversations.filter((c) => {
@@ -130,7 +130,7 @@ export default function MessagingPage({ conversations: initialConvos, currentUse
         <div className="flex-1 overflow-y-auto">
           {filteredConvos.map((conv) => {
             const other = getOtherParticipant(conv);
-            const lastMsg = (conv.last_message as Record<string, unknown>[] | null)?.[0];
+            const lastMsg = conv.last_message as Record<string, unknown> | null;
             const isActive = conv.id === activeConvId;
 
             return (
