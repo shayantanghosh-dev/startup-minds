@@ -5,7 +5,6 @@ import { formatRelativeTime } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Briefcase, CheckCircle, Clock, ArrowRight, Plus } from "lucide-react";
 
 interface DealRoom {
@@ -77,13 +76,16 @@ export function DealRoomsPage({ dealRooms, role }: DealRoomsPageProps) {
             const completedMilestones = room.deal_room_milestones?.filter(m => m.status === "completed").length ?? 0;
             const progress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
-            const counterpart = role === "founder" ? room.investors : room.startups;
             const counterpartName = role === "founder"
               ? (room.investors?.organization || room.investors?.users?.full_name || "Investor")
               : (room.startups?.name || "Startup");
 
             return (
-              <Card key={room.id} className="hover:border-primary/50 transition-colors">
+              <Card
+                key={room.id}
+                className="hover:border-primary/50 transition-colors flex flex-col"
+              >
+                {/* ── Header: title + status badge ── */}
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -95,24 +97,41 @@ export function DealRoomsPage({ dealRooms, role }: DealRoomsPageProps) {
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {room.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{room.description}</p>
-                  )}
 
-                  {totalMilestones > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3" /> Milestones</span>
-                        <span>{completedMilestones}/{totalMilestones}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-                  )}
+                {/* ── Body: flex-1 so it fills available space ── */}
+                <CardContent className="flex flex-col flex-1 gap-3">
 
-                  <div className="flex items-center justify-between pt-1">
+                  {/* Description — fixed 2-line height regardless of content */}
+                  <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                    {room.description ?? ""}
+                  </p>
+
+                  {/* Milestones — fixed height slot: always occupies space,
+                      progress bar shown only when milestones exist */}
+                  <div className="h-[2.25rem]">
+                    {totalMilestones > 0 ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" /> Milestones
+                          </span>
+                          <span>{completedMilestones}/{totalMilestones}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Spacer pushes footer to the bottom */}
+                  <div className="flex-1" />
+
+                  {/* ── Footer: always at the bottom of every card ── */}
+                  <div className="flex items-center justify-between pt-1 border-t">
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatRelativeTime(room.updated_at)}

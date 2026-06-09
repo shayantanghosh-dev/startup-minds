@@ -16,5 +16,5 @@ export default async function InvestorNotificationsPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  return <NotificationsPage notifications={notifications ?? []} userId={user.id} />;
+  return <NotificationsPage notifications={notifications ?? []} userId={user.id} role="investor" />;
 }
