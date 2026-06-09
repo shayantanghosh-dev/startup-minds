@@ -18,10 +18,32 @@ export default async function FounderMessagesPage() {
       *,
       participants:conversation_participants(
         user:users(id, full_name, avatar_url, role)
-      ),
-      last_message:messages(content, created_at, sender_id)
+      )
     `)
+    .contains("participant_ids", [user.id])
     .order("updated_at", { ascending: false });
 
-  return <MessagingPage conversations={conversations ?? []} currentUserId={user.id} />;
+  // Attach last message per conversation
+  const convIds = (conversations ?? []).map(c => c.id as string);
+  const lastMessages: Record<string, Record<string, unknown>> = {};
+  if (convIds.length > 0) {
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("conversation_id, content, created_at, sender_id")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false });
+
+    if (msgs) {
+      for (const m of msgs) {
+        const cid = m.conversation_id as string;
+        if (!lastMessages[cid]) lastMessages[cid] = m;
+      }
+    }
+  }
+  const hydratedConversations = (conversations ?? []).map(c => ({
+    ...c,
+    last_message: lastMessages[c.id as string] ?? null,
+  }));
+
+  return <MessagingPage conversations={hydratedConversations} currentUserId={user.id} />;
 }

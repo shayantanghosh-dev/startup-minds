@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, Heart, Bookmark, Brain, TrendingUp, X } from "lucide-react";
+import { Search, Filter, Heart, Bookmark, Brain, TrendingUp, X, UserPlus, Check, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -22,17 +22,21 @@ interface StartupDiscoveryProps {
     pitches?: Array<{ status: string; amount_raising: number; ai_quality_score: number | null }>;
   }>;
   investorId: string;
+  currentUserId: string;
+  connectionMap: Record<string, string>; // founderId → status
 }
 
 const STAGES = ["idea", "pre_seed", "seed", "series_a", "series_b", "series_c", "growth"];
 const INDUSTRIES = ["Technology", "FinTech", "HealthTech", "EdTech", "AgriTech", "CleanTech", "D2C", "SaaS", "AI/ML", "Other"];
 
-export function StartupDiscovery({ startups, investorId }: StartupDiscoveryProps) {
+export function StartupDiscovery({ startups, investorId, currentUserId, connectionMap }: StartupDiscoveryProps) {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
   const [industryFilter, setIndustryFilter] = useState<string>("all");
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [connStatuses, setConnStatuses] = useState<Record<string, string>>(connectionMap);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
   const supabase = createClient();
 
   const filtered = startups.filter((s) => {
@@ -75,6 +79,25 @@ export function StartupDiscovery({ startups, investorId }: StartupDiscoveryProps
       await supabase.from("bookmarks").insert({ startup_id: startupId });
       setBookmarkedIds((prev) => new Set([...prev, startupId]));
       toast.success("Startup bookmarked");
+    }
+  }
+
+  async function handleConnect(founderId: string) {
+    setConnectingId(founderId);
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receiver_id: founderId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Failed to send request"); return; }
+      setConnStatuses(prev => ({ ...prev, [founderId]: "pending" }));
+      toast.success("Connection request sent");
+    } catch {
+      toast.error("Failed to send connection request");
+    } finally {
+      setConnectingId(null);
     }
   }
 
@@ -155,6 +178,8 @@ export function StartupDiscovery({ startups, investorId }: StartupDiscoveryProps
           const pitch = startup.pitches?.[0];
           const isLiked = likedIds.has(startup.id);
           const isBookmarked = bookmarkedIds.has(startup.id);
+          const founderId = startup.founder_id;
+          const connStatus = connStatuses[founderId];
 
           return (
             <Card key={startup.id} className="group hover:shadow-lg transition-shadow duration-200">
@@ -236,6 +261,19 @@ export function StartupDiscovery({ startups, investorId }: StartupDiscoveryProps
                   >
                     Add to Pipeline
                   </Button>
+                  {founderId && founderId !== currentUserId && (
+                    <Button
+                      size="sm"
+                      variant={connStatus === "accepted" ? "default" : connStatus === "pending" ? "secondary" : "outline"}
+                      className="h-8 px-3"
+                      disabled={!!connStatus || connectingId === founderId}
+                      onClick={() => !connStatus && handleConnect(founderId)}
+                    >
+                      {connStatus === "accepted" ? <><Check className="h-3.5 w-3.5" /></> :
+                       connStatus === "pending" ? <><Clock className="h-3.5 w-3.5" /></> :
+                       <><UserPlus className="h-3.5 w-3.5" /></>}
+                    </Button>
+                  )}
                   <Button size="sm" className="flex-1 h-8" asChild>
                     <Link href={`/startups/${startup.id}`}>View Pitch</Link>
                   </Button>

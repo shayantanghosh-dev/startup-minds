@@ -28,5 +28,23 @@ export default async function DiscoverPage() {
     .order("health_score", { ascending: false })
     .limit(20);
 
-  return <StartupDiscovery startups={startups ?? []} investorId={investor.id} />;
+  // Fetch existing connection requests sent by current user
+  const { data: existingConnections } = await supabase
+    .from("connection_requests")
+    .select("receiver_id, status")
+    .eq("sender_id", user.id);
+
+  const connectionMap: Record<string, string> = {};
+  for (const c of existingConnections ?? []) {
+    connectionMap[c.receiver_id] = c.status;
+  }
+
+  return (
+    <StartupDiscovery
+      startups={startups ?? []}
+      investorId={investor.id}
+      currentUserId={user.id}
+      connectionMap={connectionMap}
+    />
+  );
 }

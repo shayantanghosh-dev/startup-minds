@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
-import { Search, CheckCircle, XCircle, Clock, Shield } from "lucide-react";
+import { Search, CheckCircle, XCircle, Clock, Shield, FileText, ExternalLink, Loader2 } from "lucide-react";
 
 interface AdminInvestorsPageProps {
   investors: Array<Record<string, unknown>>;
@@ -27,6 +27,21 @@ export function AdminInvestorsPage({ investors }: AdminInvestorsPageProps) {
   const supabase = createClient();
   const [search, setSearch] = useState("");
   const [filterKyc, setFilterKyc] = useState("all");
+  const [loadingDocId, setLoadingDocId] = useState<string | null>(null);
+
+  async function viewDocument(docId: string) {
+    setLoadingDocId(docId);
+    try {
+      const res = await fetch(`/api/kyc/signed-url?document_id=${docId}`);
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Failed to load document"); return; }
+      window.open(data.url, "_blank");
+    } catch {
+      toast.error("Failed to load document");
+    } finally {
+      setLoadingDocId(null);
+    }
+  }
 
   const filtered = investors.filter(inv => {
     const user = inv.users as Record<string, unknown> | null;
@@ -99,9 +114,27 @@ export function AdminInvestorsPage({ investors }: AdminInvestorsPageProps) {
                     <p className="text-xs text-muted-foreground">{(user?.email as string) ?? ""}</p>
                     {!!(inv.organization) && <p className="text-xs text-muted-foreground">{inv.organization as string}</p>}
                   </div>
-                  <div className="text-center hidden sm:block">
-                    <p className="text-xs font-medium">{kycDocs.length} docs</p>
-                    <p className="text-xs text-muted-foreground">KYC files</p>
+                  <div className="hidden sm:flex flex-col gap-1 min-w-[120px]">
+                    {kycDocs.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No documents</p>
+                    ) : kycDocs.map(doc => (
+                      <Button
+                        key={doc.id as string}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs justify-start px-2"
+                        disabled={loadingDocId === (doc.id as string)}
+                        onClick={() => viewDocument(doc.id as string)}
+                      >
+                        {loadingDocId === (doc.id as string) ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <FileText className="h-3 w-3 mr-1" />
+                        )}
+                        {(doc.document_type as string)?.replace(/_/g, " ") ?? "Document"}
+                        <ExternalLink className="h-2.5 w-2.5 ml-1 opacity-60" />
+                      </Button>
+                    ))}
                   </div>
                   <div className={`text-xs font-medium hidden md:block ${statusCfg.color}`}>
                     {statusCfg.label}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Edit, History, Brain, TrendingUp, AlertTriangle, CheckCircle, ArrowRight } from "lucide-react";
+import { Edit, History, Brain, TrendingUp, AlertTriangle, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,26 @@ interface PitchDetailProps {
 export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
   const status = STATUS_CONFIG[pitch.status] ?? { label: pitch.status, variant: "secondary" as const };
   const aiAnalysis = pitch.ai_analysis;
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+
+  async function handleRestore(versionId: string) {
+    setRestoringId(versionId);
+    try {
+      const res = await fetch("/api/pitch/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version_id: versionId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error ?? "Restore failed"); return; }
+      toast.success("Pitch restored to selected version");
+      window.location.reload();
+    } catch {
+      toast.error("Failed to restore pitch");
+    } finally {
+      setRestoringId(null);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -220,8 +241,18 @@ export function PitchDetail({ pitch, versions, onEdit }: PitchDetailProps) {
                           {version.change_summary} • {formatDate(version.created_at)}
                         </p>
                       </div>
-                      <Button variant="ghost" size="sm">
-                        Restore <ArrowRight className="ml-1 h-3 w-3" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={!!restoringId}
+                        onClick={() => handleRestore(version.id)}
+                      >
+                        {restoringId === version.id ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        )}
+                        Restore
                       </Button>
                     </div>
                   ))}

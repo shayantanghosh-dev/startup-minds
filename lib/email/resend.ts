@@ -97,6 +97,28 @@ export async function sendConnectionRequestEmail(
   });
 }
 
+export async function sendConnectionAcceptedEmail(
+  email: string,
+  senderName: string,
+  receiverName: string
+) {
+  return resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: `${receiverName} accepted your connection request`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #6366f1;">Connection Accepted! 🎉</h2>
+        <p>Hi ${senderName}, <strong>${receiverName}</strong> has accepted your connection request on StartupMinds.</p>
+        <p>You can now message each other directly through the platform.</p>
+        <a href="${APP_URL}/dashboard/messages" style="background: #6366f1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 16px;">
+          Send a Message
+        </a>
+      </div>
+    `,
+  });
+}
+
 export async function sendKYCStatusEmail(
   email: string,
   name: string,
