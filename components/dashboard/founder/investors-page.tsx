@@ -5,37 +5,38 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Users, MapPin, DollarSign, Zap, Star, Mail } from "lucide-react";
+import { Users, MapPin, DollarSign, Zap, Star, Mail, ExternalLink } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import Link from "next/link";
 
 interface InvestorUser {
+  id?: string;
   full_name: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
   email: string;
-  location?: string;
+  location?: string | null;
 }
 
 interface InvestorRecord {
   id: string;
-  organization?: string;
-  organization_type?: string;
-  min_ticket_size?: number;
-  max_ticket_size?: number;
-  preferred_sectors?: string[];
-  preferred_stages?: string[];
-  investment_thesis?: string;
+  user_id?: string;
+  organization?: string | null;
+  organization_type?: string | null;
+  min_ticket_size?: number | null;
+  max_ticket_size?: number | null;
+  preferred_sectors?: string[] | null;
+  preferred_stages?: string[] | null;
+  investment_thesis?: string | null;
   is_verified: boolean;
-  // Supabase may return nested relations as array or object
-  users: InvestorUser | InvestorUser[] | null;
+  users: InvestorUser | null;
 }
 
 interface InvestorMatch {
   id: string;
   compatibility_score: number;
-  match_reasons: string[] | null;
-  ai_explanation?: string;
-  // Supabase may return as array or object depending on relation cardinality
-  investors: InvestorRecord | InvestorRecord[] | null;
+  match_reasons?: string[] | null;
+  ai_explanation?: string | null;
+  investors: InvestorRecord | null;
 }
 
 interface FounderInvestorsPageProps {
@@ -62,6 +63,9 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
     );
   }
 
+  // Filter out any matches with missing investor/user data
+  const validMatches = matches.filter((m) => m.investors && m.investors.users);
+
   return (
     <div className="space-y-6">
       <div>
@@ -69,7 +73,7 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
         <p className="text-muted-foreground">AI-powered investor matches for <strong>{startup.name}</strong></p>
       </div>
 
-      {matches.length === 0 ? (
+      {validMatches.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 gap-4">
             <div className="rounded-full bg-primary/10 p-4"><Zap className="h-8 w-8 text-primary" /></div>
@@ -83,14 +87,11 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
         </Card>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">{matches.length} investor match{matches.length !== 1 ? "es" : ""} found</p>
+          <p className="text-sm text-muted-foreground">{validMatches.length} investor match{validMatches.length !== 1 ? "es" : ""} found</p>
           <div className="grid gap-4 md:grid-cols-2">
-            {matches.map(match => {
-              // Supabase can return relations as array or object — normalise both
-              const inv = Array.isArray(match.investors) ? match.investors[0] : match.investors;
-              if (!inv) return null;
-              const user = Array.isArray(inv.users) ? inv.users[0] : inv.users;
-              if (!user) return null;
+            {validMatches.map(match => {
+              const inv = match.investors!;
+              const user = inv.users!;
               return (
                 <Card key={match.id} className="hover:border-primary/30 transition-colors">
                   <CardHeader className="pb-3">
@@ -166,11 +167,20 @@ export function FounderInvestorsPage({ startup, matches }: FounderInvestorsPageP
                       </div>
                     )}
 
-                    <Button variant="outline" size="sm" className="w-full gap-2" asChild>
-                      <a href={`mailto:${user.email}`}>
-                        <Mail className="h-3.5 w-3.5" /> Connect via Email
-                      </a>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 gap-2" asChild>
+                        <a href={`mailto:${user.email}`}>
+                          <Mail className="h-3.5 w-3.5" /> Email
+                        </a>
+                      </Button>
+                      {inv.user_id && (
+                        <Button size="sm" className="flex-1 gap-2" asChild>
+                          <Link href={`/profile/${inv.user_id}`}>
+                            <ExternalLink className="h-3.5 w-3.5" /> View Profile
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );

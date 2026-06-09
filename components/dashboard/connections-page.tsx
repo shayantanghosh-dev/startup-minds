@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { UserCheck, UserX, Clock, CheckCircle, MessageSquare, Loader2, Users } from "lucide-react";
+import { UserCheck, UserX, Clock, CheckCircle, MessageSquare, Loader2, Users, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface ConnectionRequest {
   id: string;
@@ -151,6 +152,11 @@ export function ConnectionsPage({ connections: initial, currentUserId }: Connect
                   </Button>
                 </>
               )}
+              <Button size="sm" variant="ghost" className="h-8" asChild>
+                <Link href={`/profile/${other.id}`}>
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" /> Profile
+                </Link>
+              </Button>
               {isAccepted && (
                 <Button size="sm" variant="outline" className="h-8" onClick={() => startConversation(other.id)}>
                   <MessageSquare className="h-3.5 w-3.5 mr-1" /> Message

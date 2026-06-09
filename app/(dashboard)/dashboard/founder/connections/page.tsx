@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { ConnectionsPage } from "@/components/dashboard/connections-page";
 
 export default async function FounderConnectionsPage() {
@@ -8,10 +8,12 @@ export default async function FounderConnectionsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: connections } = await supabase
+  const admin = await createAdminClient();
+
+  const { data: connections } = await admin
     .from("connection_requests")
     .select(`
-      *,
+      id, status, message, created_at,
       sender:users!sender_id(id, full_name, avatar_url, role),
       receiver:users!receiver_id(id, full_name, avatar_url, role)
     `)
