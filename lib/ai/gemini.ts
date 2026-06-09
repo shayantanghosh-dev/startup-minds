@@ -1,22 +1,33 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import type { Pitch, AIAnalysis, StartupHealthScore } from "@/types";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// gemini-2.0-flash-lite has free-tier quota; 1.5-flash is deprecated, 2.0-flash needs billing
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+// Groq is used for AI inference — free tier, no quota issues
+// Model: llama-3.3-70b-versatile is fast, capable, and free on Groq
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 async function generateJSON<T>(prompt: string): Promise<T> {
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful AI assistant. Always respond with valid JSON only — no markdown, no code fences, no extra text.",
+      },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.3,
+    max_tokens: 2048,
+    response_format: { type: "json_object" },
+  });
 
-  // Strip markdown code fences if present
-  const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  const text = completion.choices[0]?.message?.content ?? "";
 
   try {
-    return JSON.parse(cleaned) as T;
+    return JSON.parse(text) as T;
   } catch {
-    throw new Error("Failed to parse AI response as JSON");
+    // Strip any accidental fences and retry
+    const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    return JSON.parse(cleaned) as T;
   }
 }
 
@@ -26,7 +37,7 @@ export async function analyzePitch(pitch: Partial<Pitch>): Promise<AIAnalysis> {
 STARTUP PITCH DATA:
 ${JSON.stringify(pitch, null, 2)}
 
-Provide a detailed analysis in the following JSON format (respond ONLY with valid JSON, no markdown):
+Provide a detailed analysis in the following JSON format:
 {
   "quality_score": <0-100 integer>,
   "strengths": ["<strength1>", "<strength2>"],
@@ -50,12 +61,12 @@ Provide a detailed analysis in the following JSON format (respond ONLY with vali
 export async function generateStartupHealthScore(
   startupData: Record<string, unknown>
 ): Promise<Omit<StartupHealthScore, "id" | "startup_id" | "computed_at">> {
-  const prompt = `You are a startup health scoring expert. Evaluate this startup's overall health and readiness based on the provided data.
+  const prompt = `You are a startup health scoring expert. Evaluate this startup's overall health and readiness.
 
 STARTUP DATA:
 ${JSON.stringify(startupData, null, 2)}
 
-Score each dimension from 0-100 and provide the result in this JSON format (respond ONLY with valid JSON, no markdown):
+Respond with this JSON:
 {
   "overall_score": <0-100>,
   "traction_score": <0-100>,
@@ -89,7 +100,7 @@ ${JSON.stringify(startupData, null, 2)}
 INVESTOR PREFERENCES:
 ${JSON.stringify(investorPreferences, null, 2)}
 
-Respond ONLY with valid JSON (no markdown):
+Respond with this JSON:
 {
   "score": <0-100 compatibility score>,
   "reasons": ["<reason1>", "<reason2>", "<reason3>"],
@@ -114,7 +125,7 @@ export async function generateInvestorSummary(
 STARTUP: ${JSON.stringify(startup, null, 2)}
 PITCH: ${JSON.stringify(pitch, null, 2)}
 
-Respond ONLY with valid JSON (no markdown):
+Respond with this JSON:
 {
   "executive_summary": "<2-3 sentence high-level summary>",
   "opportunity_analysis": "<market opportunity assessment>",

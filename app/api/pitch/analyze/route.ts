@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "pitchId required" }, { status: 400 });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured on the server" },
+        { error: "GROQ_API_KEY is not configured on the server" },
         { status: 500 }
       );
     }
