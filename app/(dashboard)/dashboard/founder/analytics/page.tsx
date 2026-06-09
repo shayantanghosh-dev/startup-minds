@@ -22,7 +22,7 @@ export default async function FounderAnalyticsPage() {
 
   // Use admin client so RLS doesn't silently filter rows written by other users
   // (analytics_events by investors, crm_records by investors, connection_requests by investors)
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
 
   const [
     { data: healthHistory },

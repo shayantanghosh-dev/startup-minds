@@ -8,7 +8,7 @@ export default async function FounderConnectionsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
 
   const { data: raw } = await admin
     .from("connection_requests")

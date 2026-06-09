@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const adminSupabase = await createAdminClient();
+  const adminSupabase = createAdminClient();
   const now = new Date();
   const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);

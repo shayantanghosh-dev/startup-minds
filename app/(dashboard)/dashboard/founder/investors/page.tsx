@@ -19,7 +19,7 @@ export default async function FounderInvestorsRoute() {
     return <FounderInvestorsPage startup={null} matches={[]} />;
   }
 
-  const admin = await createAdminClient();
+  const admin = createAdminClient();
 
   // Step 1: fetch matches — filter is_dismissed in JS to avoid boolean coercion issues
   const { data: allMatches, error: matchError } = await admin

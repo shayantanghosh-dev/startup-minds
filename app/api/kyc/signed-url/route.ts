@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 // GET /api/kyc/signed-url?document_id=xxx — generate a 1-hour signed URL for a KYC doc
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
-  const adminSupabase = await createAdminClient();
+  const adminSupabase = createAdminClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

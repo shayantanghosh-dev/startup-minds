@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "pitchId required" }, { status: 400 });
     }
 
-    const supabase = await createAdminClient();
+    const supabase = createAdminClient();
 
     // Get pitch data
     const { data: pitch, error: pitchError } = await supabase

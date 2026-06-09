@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu, Bell, Moon, Sun, Search, LogOut } from "lucide-react";
+import { Menu, Bell, Moon, Sun, Search, LogOut, Users, Building2 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,14 +26,60 @@ interface HeaderProps {
   onMenuClick: () => void;
 }
 
+interface SearchResult {
+  id: string;
+  name: string;
+  type: "startup" | "investor";
+  subtitle?: string;
+}
+
 export function Header({ user, onMenuClick }: HeaderProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { unreadCount } = useNotificationsStore();
   const supabase = createClient();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const notifPath = `/dashboard/${user.role.replace("_", "-")}/notifications`;
   const settingsPath = `/dashboard/${user.role.replace("_", "-")}/settings`;
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (!query.trim()) { setResults([]); setShowResults(false); return; }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const [{ data: startups }, { data: investors }] = await Promise.all([
+          supabase.from("startups").select("id, name, tagline").ilike("name", `%${query}%`).limit(4),
+          supabase.from("users").select("id, full_name, email").eq("role", "investor").ilike("full_name", `%${query}%`).limit(4),
+        ]);
+        const r: SearchResult[] = [
+          ...(startups ?? []).map((s) => ({ id: s.id, name: s.name, type: "startup" as const, subtitle: s.tagline ?? undefined })),
+          ...(investors ?? []).map((u) => ({ id: u.id, name: u.full_name, type: "investor" as const, subtitle: u.email })),
+        ];
+        setResults(r);
+        setShowResults(true);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -51,11 +98,55 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         <Menu className="h-5 w-5" />
       </Button>
 
-      <div className="flex-1 max-w-md">
+      <div className="flex-1 max-w-md relative" ref={searchRef}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search startups, investors..." className="pl-9 bg-muted border-0" />
+          <Input
+            placeholder="Search startups, investors..."
+            className="pl-9 bg-muted border-0"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => results.length > 0 && setShowResults(true)}
+          />
         </div>
+        {showResults && (
+          <div className="absolute top-full mt-1 w-full bg-background border rounded-lg shadow-lg z-50 overflow-hidden">
+            {searching ? (
+              <p className="text-sm text-muted-foreground px-4 py-3">Searching…</p>
+            ) : results.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-4 py-3">No results found</p>
+            ) : (
+              <ul>
+                {results.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left transition-colors"
+                      onClick={() => {
+                        setQuery("");
+                        setShowResults(false);
+                        router.push(`/profile/${r.id}`);
+                      }}
+                    >
+                      <div className={`p-1.5 rounded-full ${r.type === "startup" ? "bg-blue-100 dark:bg-blue-900" : "bg-purple-100 dark:bg-purple-900"}`}>
+                        {r.type === "startup"
+                          ? <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          : <Users className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                        }
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{r.name}</p>
+                        {r.subtitle && <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>}
+                      </div>
+                      <Badge variant="secondary" className="ml-auto text-xs shrink-0">
+                        {r.type === "startup" ? "Startup" : "Investor"}
+                      </Badge>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
