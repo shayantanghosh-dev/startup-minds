@@ -21,7 +21,7 @@ export function PitchManagement({ startup, pitch, versions }: PitchManagementPro
         startupId={startup.id}
         startupName={startup.name}
         existingPitch={pitch ?? undefined}
-        onCancel={pitch ? () => setShowWizard(false) : undefined}
+        onCancel={() => setShowWizard(false)}
       />
     );
   }
