@@ -21,15 +21,18 @@ export default async function FounderInvestorsRoute() {
 
   const admin = await createAdminClient();
 
-  // Step 1: fetch matches with investor_id
-  const { data: rawMatches } = await admin
+  // Step 1: fetch matches — filter is_dismissed in JS to avoid boolean coercion issues
+  const { data: allMatches, error: matchError } = await admin
     .from("startup_matches")
-    .select("id, compatibility_score, match_reasons, ai_explanation, investor_id")
+    .select("id, compatibility_score, match_reasons, ai_explanation, investor_id, is_dismissed")
     .eq("startup_id", startup.id)
-    .eq("is_dismissed", false)
     .order("compatibility_score", { ascending: false });
 
-  if (!rawMatches?.length) {
+  if (matchError) console.error("[investors] startup_matches error:", matchError);
+
+  const rawMatches = (allMatches ?? []).filter((m) => !m.is_dismissed);
+
+  if (!rawMatches.length) {
     return <FounderInvestorsPage startup={startup} matches={[]} />;
   }
 
