@@ -230,7 +230,7 @@ export function PitchWorkspace({ startup, pitch, versions, onNewVersion }: Pitch
       const res = await fetch("/api/pitch/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pitch_id: pitch.id }),
+        body: JSON.stringify({ pitchId: pitch.id }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "AI analysis failed"); }
