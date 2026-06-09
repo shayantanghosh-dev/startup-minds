@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { FounderInvestorsPage } from "@/components/dashboard/founder/investors-page";
 
@@ -15,14 +15,17 @@ export default async function FounderInvestorsRoute() {
     .eq("founder_id", user.id)
     .single();
 
-  const { data: matches } = startup ? await supabase
+  // Use admin client so nested joins to investors + users resolve correctly
+  // regardless of RLS policy evaluation order on nested selects.
+  const adminSupabase = await createAdminClient();
+  const { data: matches } = startup ? await adminSupabase
     .from("startup_matches")
     .select(`
-      *,
-      investors(
+      id, compatibility_score, match_reasons, ai_explanation, is_dismissed,
+      investors!investor_id(
         id, organization, organization_type, min_ticket_size, max_ticket_size,
         preferred_sectors, preferred_stages, investment_thesis, is_verified,
-        users(full_name, avatar_url, email, location)
+        users!user_id(full_name, avatar_url, email, location)
       )
     `)
     .eq("startup_id", startup.id)
