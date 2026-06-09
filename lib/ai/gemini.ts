@@ -3,8 +3,8 @@ import type { Pitch, AIAnalysis, StartupHealthScore } from "@/types";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-// gemini-1.5-flash has a free tier; gemini-2.0-flash requires billing
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// gemini-1.5-flash-latest resolves correctly on v1beta free tier
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 async function generateJSON<T>(prompt: string): Promise<T> {
   const result = await model.generateContent(prompt);
